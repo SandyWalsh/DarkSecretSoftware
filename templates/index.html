@@ -1,0 +1,62 @@
+<!-- Dark Secret Software Inc. - Corporate site -->
+<html lang="en">
+    <head>                                                                  
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.3.min.js">
+        </script>
+        <script type="text/javascript" src="/static/js/jquery.scrollTo-min.js">
+        </script>
+
+        <style type="text/css">
+        @font-face {
+            font-family: Pixel;
+            src: url('/static/media/slkscr.ttf');
+        }
+        </style>
+
+        <script type="text/javascript">             
+            $(document).ready(function() {               
+                if ($.browser.msie) {
+                    $("#ie").show();
+                }
+                $("#console").change(function() {
+                    $.post("/query/", {query: $("#console").val()},
+                        function(data) {
+                            var x = $("<div style='margin-top:.5em;'></div>").text('> ' + $("#console").val());
+                            x.insertBefore("#entry");               
+                            $("#entry").before(data); 
+                            $('#workarea').scrollTo('#entry');
+                            $("#console").val("");
+                        }
+                    );
+                });
+
+                $("#workarea").fadeIn(1000, function() {
+                    $("#console").focus();                    
+                    $('#workarea').scrollTo('#entry');                   
+                });
+            });
+       </script>                                                               
+    </head>                                                                 
+    <body style='background: black' >
+        <div id='narrative' 
+             style='position:absolute; width:651px; height:509px; background: url("/static/media/modframe.png") no-repeat;' >
+            <div id='workarea' 
+                 style='margin-top:50px; margin-left:50px; display:none; 
+                        width:550px; height:350px; overflow-y:scroll; overflow-x:hidden; 
+                        font-family:Pixel,Courier; font-size: large;'>
+                <br/><br/><br/><br/><br/><br/>
+                <div><a href="http://github.com/SandyWalsh/DarkSecretSoftware">DS/OS v0.1.1</a></div>
+                <div>&nbsp;</div>
+                <div>&gt;&nbsp;Show Logo</div>
+                <img id='logo' src='/static/media/dss.png'/>
+                <div>&gt;&nbsp;Show Contact</div>
+                <img src='/static/media/contact.png' style='margin-top:.5em;' />
+                <div id='entry'/>
+            </div>
+            <div style='position:absolute; top:410px; font-family:"Pixel"'>
+                &gt;&nbsp;<input id='console' style='width:400px; font-size:large; border:none; background:none; font-family:Pixel,Courier;' maxlength=40/>
+            </div>
+        </div>
+        <div id='ie' style='display:none; color:white; position:absolute; top:520px'>Note: You seem to running Internet Explorer, which I don't support.<br/>Do yourself a favor and <a href='http://www.google.com/chrome/intl/en/landing_chrome.html?hl=en'>use a proper browser</a>.</div>
+    </body>                                                                 
+</html>
