@@ -20,9 +20,7 @@ class Sign(Item):
         return "sign"
 
     def verb_read(self):
-        return """Dark Secret Software Inc. Corporate Office
-                <div>&nbsp;</div>
-                <img id='logo' src='/static/media/dss.png'/>"""
+        return """Dark Secret Software Inc. Corporate Office"""
 
 
 class GameException(Exception):
