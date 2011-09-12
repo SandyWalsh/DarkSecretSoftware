@@ -1,3 +1,9 @@
 <div style='margin-top:.5em; color=#222'>
-{{text}} 
+{% for esc, raw in text %}
+    {% if esc %}
+        {{raw}} 
+    {% else %}
+        {{raw|safe}}
+    {% endif %}
+{% endfor %}
 </div>
