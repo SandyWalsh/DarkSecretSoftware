@@ -95,7 +95,6 @@ def check_verb(item, verb_name):
  
 
 def read_item(request, target_name=None, **kwargs):
-    """Read an item in the current room or in my inventory."""
     target = get_target(request, target_name)
     check_verb(target, "read")
     return [(False, "%s says '%s'" % (target.name(), target.verb_read())), ]
@@ -117,12 +116,10 @@ def parse_command(text):
 
 def query(request):
     text = request.POST.get('query', "").lower()
-    logger.debug("HELLO")
     verb, target = parse_command(text)
     response = [(False, "Syntax Error"),]
     if verb in CMDS:
         try:
-            logger.debug("GOT %s %s" % (verb, target))
             response = CMDS[verb](request, target_name=target, cmds=CMDS)
         except GameException, e:
             response = [(False, e.desc), ]
