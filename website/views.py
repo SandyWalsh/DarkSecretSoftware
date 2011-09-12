@@ -67,7 +67,8 @@ def default_context(request):
     room = get_current_room(request)
     items = [str(item) for item in room['items']]
     context = { 'description' : get_description(room),
-                'items': ', '.join(items)}
+                'items': ', '.join(items),
+                'num_items': len(items)}
     return context
 
 

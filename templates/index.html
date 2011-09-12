@@ -54,8 +54,14 @@
                 <div>&nbsp;</div>
                 <div>{{description}}</div> 
                 <div>&nbsp;</div>
-                <div>There are the following items here:</div>
-                <div>{{items}}</div>
+                {% if num_items %}
+                    {% if num_items == 1 %}
+                        <div>There is a {{items}} here</div>
+                    {% else %}
+                        <div>There are the following items here:</div>
+                        <div>{{items}}</div>
+                    {% endif %}
+                {% endif %}
                 <div id='entry'/>
             </div>
             <div style='position:absolute; top:410px; font-family:"Pixel"'>
