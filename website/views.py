@@ -5,7 +5,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-VERSION = 1
+VERSION = 2
 
 
 class State(object):
@@ -33,6 +33,47 @@ class Sign(Item):
 
     def verb_read(self):
         return """Dark Secret Software Inc. Corporate Office"""
+
+
+class Axe(Item):
+    def name(self):
+        return "axe"
+
+    def verb_look(self):
+        return """A sharp splitting axe."""
+
+    def verb_take(self):
+        pass
+
+
+class Trampoline(Item):
+    def name(self):
+        return "trampoline"
+
+    def verb_look(self):
+        return """A large oval trampoline surrounded by a large net."""
+
+
+class Zipline(Item):
+    def __init__(self):
+        self.tether_west = True
+
+    def name(self):
+        return "zipline"
+
+    def verb_look(self):
+        tether = ""
+        if self.tether_west:
+            tether = "The tether line is here."
+        return """A long steel zipline than spans the backyard. %s""" % tether
+
+
+class ThumbDrive(self):
+    def name(self):
+        "thumb drive"
+        
+    def verb_look(self):
+        return """A small metal USB thumb drive with 'DSS' engraved on the side."""
 
 
 class Door(Item):
@@ -89,8 +130,29 @@ ROOMS = {
         'short': 'The front step',
         'long': 'You are on the front step of the house.',
         'items': [Door(), ],
-        'exits': [None, None, None, 'road']
+        'exits': [None, None, 'wood shed', 'road']
+    },
+    'wood shed' : {
+        'short': 'A wood shed.',
+        'long': 'You are at the SW corner of the house, near the wood shed.',
+        'items': [Axe(), ],
+        'exits': ['trampoline', 'porch', None, None]
+    },
+    'trampoline' : {
+        'short': 'In the backyard by the trampoline.',
+        'long': 'In the NW corner of the backyard by the trapoline',
+        'items': [Trampoline(), Zipline()],
+        'exits': [None, 'muddy yard', None, 'wood shed']
+    },
+    'muddy yard' : {
+        'short': 'In a very muddy yard.',
+        'long': 'In a backyard of the house, standing up to your ankles in mud',
+        'items': [Thumbdrive()],
+        'exits': [None, None, 'trampoline', None]
     }
+
+
+
 }
 
 
