@@ -5,7 +5,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-VERSION = 2
+VERSION = 3
 
 
 class State(object):
@@ -18,8 +18,18 @@ class State(object):
     def save(self, request):
         request.session['state'] = self
 
-    def get_room(self):
-        return self.rooms[self.room_name]
+    def get_room(self, room_name = None):
+        if not room_name:
+            room_name = self.room_name
+        return self.rooms[room_name]
+
+    def remove_item(self, room, item):
+        items = room['items']
+        index = items.index(item)
+        del items[index]
+        
+    def add_item(self, room, item):
+        room['items'].append(item)
 
 
 class Item(object):
@@ -53,27 +63,40 @@ class Trampoline(Item):
     def verb_look(self):
         return """A large oval trampoline surrounded by a large net."""
 
+    def verb_use(self, state):
+        return """You bounce up and down on the trampoline. It's fun."""
 
-class Zipline(Item):
-    def __init__(self):
-        self.tether_west = True
 
+class ZiplineTether(Item):
     def name(self):
-        return "zipline"
+        return "tether"
 
     def verb_look(self):
-        tether = ""
-        if self.tether_west:
-            tether = "The tether line is here."
-        return """A long steel zipline than spans the backyard. %s""" % tether
+        return """A sturdy rope attached to a pulley on the zipeline."""
+
+    def verb_use(self, state):
+        last_room_name = state.room_name
+        if state.room_name == 'trampoline':
+            state.room_name = 'garden'
+        elif state.room_name == 'garden':
+            state.room_name = 'trampoline'
+
+        last_room = state.get_room(last_room_name)
+        state.remove_item(last_room, self)
+        room = state.get_room()
+        state.add_item(room, self)
+        return "You sail along the zipline to the other side of the yard, avoiding the mud."
 
 
-class ThumbDrive(self):
+class Key(Item):
     def name(self):
-        "thumb drive"
+        return "key"
         
     def verb_look(self):
-        return """A small metal USB thumb drive with 'DSS' engraved on the side."""
+        return """The key has a USB connector and 'DSS' engraved on the side."""
+
+    def verb_use(self, state):
+        return """You can't use that. Yet."""
 
 
 class Door(Item):
@@ -140,19 +163,22 @@ ROOMS = {
     },
     'trampoline' : {
         'short': 'In the backyard by the trampoline.',
-        'long': 'In the NW corner of the backyard by the trapoline',
-        'items': [Trampoline(), Zipline()],
+        'long': 'In the NW corner of the backyard by the trapoline. A zipline runs East to the NE corner of the backyard.',
+        'items': [Trampoline(), ZiplineTether()],
         'exits': [None, 'muddy yard', None, 'wood shed']
     },
     'muddy yard' : {
         'short': 'In a very muddy yard.',
-        'long': 'In a backyard of the house, standing up to your ankles in mud',
-        'items': [Thumbdrive()],
+        'long': 'In a backyard of the house, standing up to your ankles in mud.',
+        'items': [Key(),],
         'exits': [None, None, 'trampoline', None]
-    }
-
-
-
+    },
+    'garden' : {
+        'short': 'In a small garden in the backyard.',
+        'long': 'In the NE corner of the backyard. There is a lovely vegetable garden here. A zipline runs West to the NW corner of the backyard.',
+        'items': [],
+        'exits': [None, None, 'muddy yard', None]
+    },
 }
 
 
@@ -288,6 +314,12 @@ def do_close(state, target_name=None, **kwargs):
     return [(False, target.verb_close()),]
 
 
+def use(state, target_name=None, **kwargs):
+    target = get_target(state, target_name)
+    check_verb(target, "use")
+    return [(False, target.verb_use(state)),]
+
+
 CMDS = {
     'help': help,
     '?': help,
@@ -305,6 +337,7 @@ CMDS = {
     'open': do_open,
     'close': do_close,
     'reset': do_reset,
+    'use': use,
 }
 
 
