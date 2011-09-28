@@ -5,14 +5,34 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-VERSION = 3
+VERSION = 4
+
+
+class GameException(Exception):
+    pass
+
+
+class StartOver(Exception):
+    pass
+
+
+class NoSuchItem(GameException):
+    desc = "I don't see that item here" 
+
+
+class NotInBackpack(GameException):
+    desc = "You don't have that item in your backpack."
+
+
+class CantDoThat(GameException):
+    desc = "I don't know how to do that."
 
 
 class State(object):
     def __init__(self):
         self.rooms = ROOMS
         self.room_name = 'road'
-        self.backpack = {}
+        self.backpack = []
         self.version = VERSION
 
     def save(self, request):
@@ -31,10 +51,49 @@ class State(object):
     def add_item(self, room, item):
         room['items'].append(item)
 
+    def add_to_backpack(self, item):
+        item.is_in_backpack = True
+        self.backpack.append(item)
+
+    def remove_from_backpack(self, item):
+        index = self.backpack.index(item)
+        del self.backpack[index]
+        item.is_in_backpack = False
+
+    def get_target_from_backpack(self, item_name):
+        for item in self.backpack:
+            if item.name() == item_name:
+                return item
+        raise NotInBackpack()
+
+    def get_target(self, target_name):
+        items = self.get_all_items()
+        for item in items:
+            if target_name == item.name():
+                return item
+        raise NoSuchItem()
+
+    def get_all_items(self):
+        items = self.get_room()['items'][:]
+        items.extend(self.backpack)
+        return items
+
 
 class Item(object):
+    def __init__(self, can_take=False):
+        self.is_in_backpack = False
+        self.can_take = can_take
+
     def __str__(self):
         return self.name().capitalize()
+
+    def verb_take(self, state):
+        return self.can_take and not self.is_in_backpack
+
+
+class TakeableItem(Item):
+    def __init__(self):
+        super(TakeableItem, self).__init__(can_take=True)
 
 
 class Sign(Item):
@@ -45,15 +104,12 @@ class Sign(Item):
         return """Dark Secret Software Inc. Corporate Office"""
 
 
-class Axe(Item):
+class Axe(TakeableItem):
     def name(self):
         return "axe"
 
     def verb_look(self):
         return """A sharp splitting axe."""
-
-    def verb_take(self):
-        pass
 
 
 class Trampoline(Item):
@@ -88,7 +144,7 @@ class ZiplineTether(Item):
         return "You sail along the zipline to the other side of the yard, avoiding the mud."
 
 
-class Key(Item):
+class Key(TakeableItem):
     def name(self):
         return "key"
         
@@ -101,12 +157,16 @@ class Key(Item):
 
 class Door(Item):
     def __init__(self):
+        super(Door, self).__init__()
         self.closed = True
 
     def name(self):
         return "door"
 
     def verb_open(self):
+        # To avoid frustration, disable this for now.
+        return "The door is locked."
+
         if not self.closed:
             return "The door is already open"
 
@@ -124,22 +184,6 @@ class Door(Item):
         state = ["open", "closed"][self.closed]
         return "A large metal door, painted in a nice neutral color. " \
                "The door is currently %(state)s" % locals()
-
-
-class GameException(Exception):
-    pass
-
-
-class StartOver(Exception):
-    pass
-
-
-class NoSuchItem(GameException):
-    desc = "I don't see that item here" 
-
-
-class CantDoThat(GameException):
-    desc = "I don't know how to do that."
 
 
 ROOMS = {
@@ -169,15 +213,15 @@ ROOMS = {
     },
     'muddy yard' : {
         'short': 'In a very muddy yard.',
-        'long': 'In a backyard of the house, standing up to your ankles in mud.',
-        'items': [Key(),],
+        'long': "In a backyard of the house, standing up to your ankles in mud. You can't go any further.",
+        'items': [],
         'exits': [None, None, 'trampoline', None]
     },
     'garden' : {
         'short': 'In a small garden in the backyard.',
         'long': 'In the NE corner of the backyard. There is a lovely vegetable garden here. A zipline runs West to the NW corner of the backyard.',
-        'items': [],
-        'exits': [None, None, 'muddy yard', None]
+        'items': [Key(),],
+        'exits': [None, None, None, None]
     },
 }
 
@@ -199,12 +243,6 @@ def get_state(request):
             return state
 
     return reset(request)
-
-
-def get_all_items(state):
-    items = state.get_room()['items'][:]
-    items.extend(state.backpack.keys())
-    return items
 
 
 def get_adjacent_rooms(state):
@@ -247,14 +285,6 @@ def help(state, cmds=[], **kwargs):
     return [(False, "Commands: %s" % ', '.join(cmds.keys())),]
 
 
-def get_target(state, target_name):
-    items = get_all_items(state)
-    for item in items:
-        if target_name == item.name():
-            return item
-    raise NoSuchItem()
-
-
 def check_verb(item, verb_name):
     if hasattr(item, 'verb_%s' % (verb_name, )):
         return item
@@ -262,7 +292,7 @@ def check_verb(item, verb_name):
  
 
 def read_item(state, target_name=None, **kwargs):
-    target = get_target(state, target_name)
+    target = state.get_target(target_name)
     check_verb(target, "read")
     return [(False, "%s says '%s'" % (target.name(), target.verb_read())), ]
 
@@ -297,27 +327,57 @@ def look(state, target_name=None, **kwargs):
     if not target_name:
         return None
 
-    target = get_target(state, target_name)
+    target = state.get_target(target_name)
     check_verb(target, 'look')
     return [(False, target.verb_look()),]
 
 
 def do_open(state, target_name=None, **kwargs):
-    target = get_target(state, target_name)
+    target = state.get_target(target_name)
     check_verb(target, "open")
     return [(False, target.verb_open()),]
 
 
 def do_close(state, target_name=None, **kwargs):
-    target = get_target(state, target_name)
+    target = state.get_target(target_name)
     check_verb(target, "close")
     return [(False, target.verb_close()),]
 
 
 def use(state, target_name=None, **kwargs):
-    target = get_target(state, target_name)
+    target = state.get_target(target_name)
     check_verb(target, "use")
     return [(False, target.verb_use(state)),]
+
+
+def take(state, target_name=None, **kwargs):
+    target = state.get_target(target_name)
+    check_verb(target, "take")
+    if not target.verb_take(state):
+        return [(False, "You can't take that."),]
+
+    state.remove_item(state.get_room(), target)
+    state.add_to_backpack(target)
+    return [(False, "You put the %s in your backpack." % target_name),]
+    
+
+def drop(state, target_name=None, **kwargs):
+    target = state.get_target_from_backpack(target_name)
+    check_verb(target, "take")
+    if target.verb_take(state):
+        return [(False, "You can't drop that."),]
+
+    state.remove_from_backpack(target)
+    state.add_item(state.get_room(), target)
+    return [(False, "You drop the %s." % target_name),]
+    
+
+def inventory(state, **kwargs):
+    names = [item.name() for item in state.backpack]
+    if not names:
+        return [(False, "You are not carrying anything."), ]
+    names.sort()
+    return [(False, "You are carrying: %s" % ",".join(names)), ]
 
 
 CMDS = {
@@ -338,6 +398,10 @@ CMDS = {
     'close': do_close,
     'reset': do_reset,
     'use': use,
+    'take': take,
+    'drop': drop,
+    'i': inventory,
+    'inventory': inventory,
 }
 
 
