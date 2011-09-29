@@ -186,7 +186,7 @@ class Key(TakeableItem):
 class Computer(Item):
     def __init__(self):
         self.locked = True
-        super(Item, self).__init__()
+        super(Computer, self).__init__()
 
     def name(self):
         return "computer"
