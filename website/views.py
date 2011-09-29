@@ -147,7 +147,7 @@ class ZiplineTether(Item):
         return "tether"
 
     def verb_look(self):
-        return "A sturdy rope attached to a pulley on the zipeline."
+        return "A sturdy rope attached to a pulley on the zipline."
 
     def verb_use(self, state):
         last_room_name = state.room_name

@@ -1,0 +1,16 @@
+<div>{{description}}</div> 
+{% if num_items %}
+    <div>&nbsp;</div>
+    {% if num_items == 1 %}
+        <div>There is a {{items}} here</div>
+    {% else %}
+        <div>There are the following items here:</div>
+        <div>{{items}}</div>
+    {% endif %}
+{% endif %}
+{% if exits %}
+    <div>&nbsp;</div>
+    {% for name, room_name, room in exits %}
+        <div>To the {{name}} you see a {{room_name}}.</div>
+    {% endfor %}
+{% endif %}
