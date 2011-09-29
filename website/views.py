@@ -5,7 +5,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-VERSION = 6
+VERSION = 7
 
 
 class GameException(Exception):
@@ -186,6 +186,7 @@ class Key(TakeableItem):
 class Computer(Item):
     def __init__(self):
         self.locked = True
+        super(Item, self).__init__()
 
     def name(self):
         return "computer"
