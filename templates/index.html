@@ -19,7 +19,8 @@
                     $("#ie").show();
                 }
                 $("#console").change(function() {
-                    $.post("/query/", {query: $("#console").val()},
+                    var q = $("#console").val();
+                    $.post("/query/", {query: q},
                         function(data) {
                             var x = $("<div style='margin-top:.5em;'></div>").text('> ' + $("#console").val());
                             x.insertBefore("#entry");               
@@ -28,6 +29,8 @@
                             $("#console").val("");
                         }
                     );
+                    // Track this while the query is being issued.
+                    _gaq.push(['_trackEvent', 'Query', q]);
                 });
 
                 $("#workarea").fadeIn(1000, function() {
@@ -36,6 +39,18 @@
                 });
             });
        </script>                                                               
+       <script type="text/javascript">
+
+         var _gaq = _gaq || [];
+         _gaq.push(['_setAccount', 'UA-24024788-1']);
+         _gaq.push(['_trackPageview']);
+
+         (function() {
+           var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+           ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+           var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+         })();
+       </script>
     </head>                                                                 
     <body style='background: black' >
         <div id='narrative' 
