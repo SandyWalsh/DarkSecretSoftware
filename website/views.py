@@ -5,7 +5,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-VERSION = 4
+VERSION = 6
 
 
 class GameException(Exception):
@@ -42,6 +42,13 @@ class State(object):
         if not room_name:
             room_name = self.room_name
         return self.rooms[room_name]
+
+    def get_item(self, item_name):
+        items = self.get_all_items()
+        for item in items:
+            if item.name() == item_name:
+                return item
+        raise NoSuchItem()
 
     def remove_item(self, room, item):
         items = room['items']
@@ -101,7 +108,7 @@ class Sign(Item):
         return "sign"
 
     def verb_read(self):
-        return """Dark Secret Software Inc. Corporate Office"""
+        return "Dark Secret Software Inc. Corporate Office. Go inside for contact information."
 
 
 class Axe(TakeableItem):
@@ -111,16 +118,28 @@ class Axe(TakeableItem):
     def verb_look(self):
         return """A sharp splitting axe."""
 
+    def verb_use(self, state):
+        if not state.room_name == "porch":
+            return "You check the axe with your fingernail. It's very sharp."
+
+        room = state.get_room()
+        door = state.get_item("door")
+        if door.locked:
+            door.locked = False
+            return "You smash the lock on the door. It shatters."
+        else:
+            return "Don't you think you've done enough already?"
+
 
 class Trampoline(Item):
     def name(self):
         return "trampoline"
 
     def verb_look(self):
-        return """A large oval trampoline surrounded by a large net."""
+        return "A large oval trampoline surrounded by a large net."
 
     def verb_use(self, state):
-        return """You bounce up and down on the trampoline. It's fun."""
+        return "Wee! You bounce up and down on the trampoline. It's fun."
 
 
 class ZiplineTether(Item):
@@ -128,7 +147,7 @@ class ZiplineTether(Item):
         return "tether"
 
     def verb_look(self):
-        return """A sturdy rope attached to a pulley on the zipeline."""
+        return "A sturdy rope attached to a pulley on the zipeline."
 
     def verb_use(self, state):
         last_room_name = state.room_name
@@ -152,32 +171,71 @@ class Key(TakeableItem):
         return """The key has a USB connector and 'DSS' engraved on the side."""
 
     def verb_use(self, state):
-        return """You can't use that. Yet."""
+        if not state.room_name == "foyer":
+            return "There's nowhere to plug it in."
+
+        room = state.get_room()
+        computer = state.get_item("computer")
+        if computer.locked:
+            computer.locked = False
+            return "You slide the key into the USB slot of the PC. The PC springs to life."
+        else:
+            return "Nothing happens."
+
+
+class Computer(Item):
+    def __init__(self):
+        self.locked = True
+
+    def name(self):
+        return "computer"
+
+    def verb_look(self):
+        status = ""
+        if self.locked:
+            status = "The computer appears to be locked."
+        return "A desktop computer which seems to be running Ubuntu. It has a USB port on the front. %s" % status
+
+    def verb_use(self, state):
+        if self.locked:
+            return "It's locked."
+        return """You tap a few keys on the keyboard. The computer responds with <br/>
+----------<br/>
+Congratulations!<br/>
+Send me an email! <a target='_blank' href='mailto:game@darksecretsoftware.com'>game@darksecretsoftware.com</a></br>
+Follow me on Twitter: <a target='_blank' href='http://twitter.com/#!/TheSandyWalsh'>@TheSandyWalsh</a><br/>
+Read my blog: <a target='_blank' href='http://sandywalsh.com'>www.SandyWalsh.com</a><br/>
+Look at <a target='_blank' href='https://github.com/SandyWalsh/DarkSecretSoftware'>the source code for this site.</a>"""
 
 
 class Door(Item):
     def __init__(self):
         super(Door, self).__init__()
+        self.locked = True
         self.closed = True
 
     def name(self):
         return "door"
 
-    def verb_open(self):
-        # To avoid frustration, disable this for now.
-        return "The door is locked."
+    def verb_open(self, state):
+        if self.locked:
+            return "The door is locked."
 
         if not self.closed:
             return "The door is already open"
 
         self.closed = False
+        room = state.get_room('porch')
+        room['exits'][0] = 'foyer'
         return "The door opens effortlessly."
 
-    def verb_close(self):
+    def verb_close(self, state):
         if self.closed:
             return "The door is already closed"
 
         self.closed = True
+        room = state.get_room('porch')
+        room['exits'][0] = None
         return "The door slowly closes and clicks shut."
 
     def verb_look(self):
@@ -198,6 +256,12 @@ ROOMS = {
         'long': 'You are on the front step of the house.',
         'items': [Door(), ],
         'exits': [None, None, 'wood shed', 'road']
+    },
+    'foyer' : {
+        'short': 'The foyer of the house.',
+        'long': 'You are in the tastefully decorated foyer of the house.',
+        'items': [Computer(), ],
+        'exits': [None, None, None, 'porch']
     },
     'wood shed' : {
         'short': 'A wood shed.',
@@ -335,13 +399,13 @@ def look(state, target_name=None, **kwargs):
 def do_open(state, target_name=None, **kwargs):
     target = state.get_target(target_name)
     check_verb(target, "open")
-    return [(False, target.verb_open()),]
+    return [(False, target.verb_open(state)),]
 
 
 def do_close(state, target_name=None, **kwargs):
     target = state.get_target(target_name)
     check_verb(target, "close")
-    return [(False, target.verb_close()),]
+    return [(False, target.verb_close(state)),]
 
 
 def use(state, target_name=None, **kwargs):
