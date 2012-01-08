@@ -111,6 +111,14 @@ class Sign(Item):
         return "Dark Secret Software Inc. Corporate Office. Go inside for contact information."
 
 
+class Note(TakeableItem):
+    def name(self):
+        return "note"
+
+    def verb_read(self):
+        return "If you're designing or writing an indy game, for computer or cardboard, meet at Celtic Corner (<a href='http://www.celticcorner.ca/'>www.celticcorner.ca</a>) Feb 5th, 9am for breakfast. Artists welcome!"
+
+
 class Axe(TakeableItem):
     def name(self):
         return "axe"
@@ -249,7 +257,7 @@ ROOMS = {
     'road' : {
         'short': 'Outside a lovely home.',
         'long': 'You are standing outside a lovely home in rural Nova Scotia, Canada',
-        'items': [Sign(), ],
+        'items': [Sign(), Note()],
         'exits': ['porch', None, None, None]
     },
     'porch' : {
