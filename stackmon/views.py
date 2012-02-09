@@ -1,5 +1,7 @@
 from django.shortcuts import render_to_response
+import json
 import logging
+import pprint
 import sys
 
 logger = logging.getLogger(__name__)
@@ -34,10 +36,15 @@ def home(request, state=None):
     return render_to_response('stackmon/index.html', default_context(state)) 
 
 
-def foo(request, state=None):
+def data(request, state=None):
     if not state:
         state = get_state(request)
-    return render_to_response('stackmon/foo.html', default_context(state)) 
+    args = request.POST.get('args', "{}")
+    args = json.loads(args)
+    c = default_context(state)
+    pp = pprint.PrettyPrinter(depth=2)
+    c['cooked_args'] = args #pp.pformat(args)
+    return render_to_response('stackmon/data.html', c)
 
 
 def query(request):
