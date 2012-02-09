@@ -116,7 +116,8 @@ class Note(TakeableItem):
         return "note"
 
     def verb_read(self):
-        return "If you're designing or writing an indy game, for computer or cardboard, meet at Celtic Corner (<a href='http://www.celticcorner.ca/'>www.celticcorner.ca</a>) Feb 5th, 9am for breakfast. Artists welcome!"
+        return "Hello!" 
+# If you're designing or writing an indy game, for computer or cardboard, meet at Celtic Corner (<a href='http://www.celticcorner.ca/'>www.celticcorner.ca</a>) Feb 5th, 9am for breakfast. Artists welcome! Register here: <a href='http://halifaxindygame.eventbrite.com'>halifaxindygame.eventbrite.com</a>"
 
 
 class Axe(TakeableItem):
