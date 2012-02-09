@@ -6,7 +6,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('',
     url(r'^', include('dss.website.urls')),
-    url(r'^stackmon/', include('dss.stackmon.urls')),
+    url(r'^stacktach/', include('dss.stackmon.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
