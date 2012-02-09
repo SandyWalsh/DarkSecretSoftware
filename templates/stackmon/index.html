@@ -3,9 +3,7 @@
     <head>                                                                  
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.3.min.js">
         </script>
-        <script type="text/javascript" src="/static/js/jquery.scrollTo-min.js">
-        </script>
-
+        <script type="text/javascript" src="/static/js/jquery.timers.js"></script>
         <link href='http://fonts.googleapis.com/css?family=Kaushan+Script' rel='stylesheet' type='text/css'>
         <link href='http://fonts.googleapis.com/css?family=PT+Sans&subset=latin' rel='stylesheet' type='text/css'>
 
@@ -30,7 +28,7 @@
                 font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
             }
             .status {
-                border:1px #222 solid;
+                border:1px #bbbbcc solid;
                 width:-1em;
                 margin-bottom:2em;
             }
@@ -69,33 +67,15 @@
 
         <div class='status'>
             <div class='status-title'>Recent Host Activity</div>
-            <div class='status-inner'>
-                <div>blah blah blah</div>
-                  <div>blah blah blah</div>
-                <div>blah blah blah</div>
-                <div>blah blah blah</div>
-               <div>blah blah blah</div>
-                <div>blah blah blah</div>
-                <div>blah blah blah</div>
-               <div>blah blah blah</div>
-                <div>blah blah blah</div>
-                <div>blah blah blah</div>
+            <div id='host_activity' class='status-inner'>
+                {% include "stackmon/host_status.html" %}
             </div>
         </div>
         <div class='status'>
             <div class='status-title'>Recent Instance Activity</div>
-            <div class='status-inner'>
-                <div>blah blah blah</div>
-                <div>blah blah blah</div>
-                    <div>blah blah blah</div>
-                <div>blah blah blah</div>
-                <div>blah blah blah</div>
-               <div>blah blah blah</div>
-                <div>blah blah blah</div>
-                <div>blah blah blah</div>
-             <div>blah blah blah</div>
-                <div>blah blah blah</div>
-            </div>
+            <div id='instance_activity' class='status-inner'>
+                {% include "stackmon/instance_status.html" %}
+           </div>
         </div>
         <div class='status'>
             <div class='status-title'>Commands</div>
@@ -109,5 +89,6 @@
                     <div>blah blah blah</div>
                 </div>
         </div>
+        
     </body>                                                                 
 </html>

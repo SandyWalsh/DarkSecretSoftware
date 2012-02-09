@@ -2,6 +2,7 @@ from django.shortcuts import render_to_response
 import json
 import logging
 import pprint
+import random
 import sys
 
 logger = logging.getLogger(__name__)
@@ -26,19 +27,17 @@ def get_state(request):
 
 
 def default_context(state):
-    context = {}
+    context = dict(number=random.randrange(1000))
     return context
 
 
-def home(request, state=None):
-    if not state:
-        state = get_state(request)
+def home(request):
+    state = get_state(request)
     return render_to_response('stackmon/index.html', default_context(state)) 
 
 
-def data(request, state=None):
-    if not state:
-        state = get_state(request)
+def data(request):
+    state = get_state(request)
     args = request.POST.get('args', "{}")
     args = json.loads(args)
     c = default_context(state)
@@ -47,28 +46,13 @@ def data(request, state=None):
     return render_to_response('stackmon/data.html', c)
 
 
-def query(request):
+def host_status(request):
     state = get_state(request)
+    c = default_context(state)
+    return render_to_response('stackmon/host_status.html', c)
 
-    text = request.POST.get('query', "").lower()
-    verb, target = parse_command(text)
 
-    response = [(False, "Syntax Error"),]
-    if verb in CMDS:
-        try:
-            response = CMDS[verb](state, 
-                                  verb=verb, target_name=target,
-                                  cmds=CMDS)
-        except GameException, e:
-            response = [(False, e.desc), ]
-        except StartOver, e:
-            state = reset(request)
-            response = [(False, "Game reset."), ]
-        except Exception, e:
-            response = [(False, e), ]
-    context = default_context(state)
-    state.save(request)
-    if response:
-        context['text'] = response
-        return render_to_response('query.html', context)
-    return render_to_response('look.html', context)
+def instance_status(request):
+    state = get_state(request)
+    c = default_context(state)
+    return render_to_response('stackmon/instance_status.html', c)

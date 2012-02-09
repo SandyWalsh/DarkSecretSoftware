@@ -7,6 +7,8 @@ from django.conf.urls.defaults import patterns, include, url
 urlpatterns = patterns('',
     url(r'^$', 'dss.stackmon.views.home', name='home'),
     url(r'data/', 'dss.stackmon.views.data', name='data'),
+    url(r'host_status/', 'dss.stackmon.views.host_status', name='host_status'),
+    url(r'instance_status/', 'dss.stackmon.views.instance_status', name='instance_status'),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
