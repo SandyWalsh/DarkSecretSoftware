@@ -1,8 +1,4 @@
-{% for host in hosts %}
-    <p style='margin:0;padding:0;'>
-        {% if not host.routing_key %}-{% else %}{{host.routing_key}} {%endif%}
-        , {{host.service}}, {{host.host}}, {{host.event}}, {{host.when|timesince}} ago</p>
-{% endfor %}
+{% include "stackmon/rows.html" %}
 
 <script type="text/javascript">
   $(document).oneTime(2000, function() {

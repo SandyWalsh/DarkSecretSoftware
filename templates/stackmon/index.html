@@ -27,6 +27,14 @@
                 background:#fff;
                 font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
             }
+            a {
+                text-decoration:none;
+                color:#3f3f7f;
+            }
+            a:hover {
+                text-decoration:underline;
+            }
+
             .status {
                 border:1px #bbbbcc solid;
                 width:-1em;
@@ -52,12 +60,25 @@
                 margin-right:1em;
                 padding-bottom:1em;
                 margin-bottom:1em;
+            }
+            .std-height {
                 height:5em;
                 overflow-y:scroll;
             }
+
         </style>
 
         <script type="text/javascript">             
+            function details(column, row_id)
+            {
+                $("#detail").load('/stacktach/details/' + column + '/' + row_id);
+            };
+
+            function expand(row_id)
+            {
+                $("#row_expansion_" + row_id).load('/stacktach/expand/' + row_id);
+            };
+
             $(document).ready(function() {               
             });
        </script>                                                               
@@ -67,25 +88,25 @@
 
         <div class='status'>
             <div class='status-title'>Recent Host Activity</div>
-            <div id='host_activity' class='status-inner'>
+            <div id='host_activity' class='status-inner std-height'>
                 {% include "stackmon/host_status.html" %}
             </div>
         </div>
         <div class='status'>
             <div class='status-title'>Recent Instance Activity</div>
-            <div id='instance_activity' class='status-inner'>
+            <div id='instance_activity' class='status-inner std-height'>
                 {% include "stackmon/instance_status.html" %}
            </div>
         </div>
         <div class='status'>
             <div class='status-title'>Commands</div>
-                <div class='status-inner' style='height:1em;'>
+                <div class='status-inner std-height' style='height:1em;'>
                     <div>blah blah blah</div>
                 </div>
         </div>
         <div class='status'>
             <div class='status-title'>Details</div>
-                <div class='status-inner' style='height:20em;'>
+                <div id='detail' class='status-inner'>
                     <div>blah blah blah</div>
                 </div>
         </div>

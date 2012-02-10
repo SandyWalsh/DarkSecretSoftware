@@ -21,7 +21,10 @@ def _monitor_message(routing_key, body):
     parts = publisher.split('.')   
     service = parts[0]
     host = parts[1]
-    instance = body['payload'].get('instance_id', None)
+    payload = body['payload']
+    request_spec = payload.get('request_spec', None)
+    instance = None
+    instance = payload.get('instance_id', instance)
     event = body['event_type']
     return dict(host=host, instance=instance, publisher=publisher,
                 service=service, event=event)
@@ -54,12 +57,18 @@ def _parse(tenant, args, json_args):
         values['tenant'] = tenant
         when = body['_context_timestamp']
         when = datetime.datetime.strptime(when, "%Y-%m-%dT%H:%M:%S.%f")
-        values['when'] = when # body['_context_timestamp']
+        values['when'] = when
+        values['microseconds'] = when.microsecond
         values['routing_key'] = routing_key
+        values['json'] = json_args
         record = models.RawData(**values)
         record.save()
         return values
     return {}
+
+
+def _post_process_raw_data(rows):
+    pass
 
 
 class State(object):
@@ -79,7 +88,7 @@ def get_state(request):
 
 
 def default_context(state):
-    context = dict(number=random.randrange(1000))
+    context = dict(utc=datetime.datetime.utcnow())
     return context
 
 
@@ -93,20 +102,45 @@ def data(request):
     raw_args = request.POST.get('args', "{}")
     args = json.loads(raw_args)
     c = default_context(state)
-    pp = pprint.PrettyPrinter(depth=2)
     fields = _parse(0, args, raw_args)
     c['cooked_args'] = fields
     return render_to_response('stackmon/data.html', c)
 
 
+def details(request, column, row_id):
+    state = get_state(request)
+    c = default_context(state)
+    row = models.RawData.objects.get(pk=row_id)
+    value = getattr(row, column)
+    c['rows'] = models.RawData.objects.filter(**{column:value}).\
+                                  order_by('-when', '-microseconds')[:200]
+    c['allow_expansion'] = True
+    return render_to_response('stackmon/rows.html', c)
+
+
+def expand(request, row_id):
+    state = get_state(request)
+    c = default_context(state)
+    row = models.RawData.objects.get(pk=row_id)
+    payload = json.loads(row.json)
+    pp = pprint.PrettyPrinter()
+    c['payload'] = pp.pformat(payload)
+    return render_to_response('stackmon/expand.html', c)
+
+
 def host_status(request):
     state = get_state(request)
     c = default_context(state)
-    c['hosts']=models.RawData.objects.filter(host__gt='').order_by('-when')[:5]
+    hosts = models.RawData.objects.filter(host__gt='').order_by('-when', '-microseconds')[:20]
+    _post_process_raw_data(hosts)
+    c['rows'] = hosts
     return render_to_response('stackmon/host_status.html', c)
 
 
 def instance_status(request):
     state = get_state(request)
     c = default_context(state)
+    instances = models.RawData.objects.exclude(instance='n/a').exclude(instance__isnull=True).order_by('-when', '-microseconds')[:20]
+    _post_process_raw_data(instances)
+    c['rows'] = instances
     return render_to_response('stackmon/instance_status.html', c)

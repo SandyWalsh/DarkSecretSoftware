@@ -1,0 +1,18 @@
+{% for row in rows %}
+<p style='margin:0;padding:0;'>
+    {% if allow_expansion %}
+    <a href='#' onclick='expand({{row.id}});'>[+]</a>
+    {% endif %}
+
+    {% if row.routing_key %}<a href='#' onclick='details("routing_key", {{row.id}});'>{{row.routing_key}}</a>, {%endif%}
+    <a href='#' onclick='details("service", {{row.id}});'>{{row.service}}</a>, 
+    <a href='#' onclick='details("host", {{row.id}});'>{{row.host}}</a>, 
+    <a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a>, 
+    <a href='#' onclick='details("instance", {{row.id}});'>{{row.instance}}</a>, 
+    <a href='#' onclick='details("when", {{row.id}});'>{{row.when|timesince:utc}} ago</a>
+</p>
+
+{% if allow_expansion %}
+<div id='row_expansion_{{row.id}}' ></div>
+{% endif %}
+{% endfor %}
