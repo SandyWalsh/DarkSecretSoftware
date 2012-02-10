@@ -17,21 +17,46 @@ VERSION = 1
 
 
 def _monitor_message(routing_key, body):
-    publisher_id = body['publisher_id']
+    publisher = body['publisher_id']
     parts = publisher_id.split('.')   
+    service = parts[0]
     host = parts[1]
     instance = body['payload'].get('instance_id', None)
-    return (host, instance)
+    event = body['event_type']
+    return dict(host=host, instance=instance, publisher=publisher,
+                service=service, event=event)
+                
 
 def _compute_update_message(routing_key, body):
-    host = 
-    instance = 
-    return (host, instance)
+    publisher = "n/a"
+    args = body['args']
+    host = args['host']
+    service = args['service_name']
+    event = body['method']
+    instance = 'n/a'
+    return dict(host=host, instance=instance, publisher=publisher,
+                service=service, event=event)
 
-
+# routing_key : handler
 HANDLERS = {'monitor.info':_monitor_message,
             'monitor.error':_monitor_message,
             '':_compute_update_message}
+
+
+def _parse(tenant_id, args, json_args):
+    routing_key, body = args
+    handler = HANDLERS.get(routing_key, None)
+    if handler:
+        values = handler(tenant_id, routing_key, body)
+        if not values:
+            return
+        values['when'] = body['_context_timestamp')
+        values['publisher'] = body['publisher_id']
+        values['when'] = datetime.strptime(when, "%Y-%m-%dT%H:%M:%S.%f")
+        values['routing_key'] = routing_key
+        record = models.RawData(**values)
+        record.save()
+
 
 class State(object):
     def __init__(self):
@@ -57,22 +82,6 @@ def default_context(state):
 def home(request):
     state = get_state(request)
     return render_to_response('stackmon/index.html', default_context(state)) 
-
-
-def _parse(tenant_id, args, json_args):
-    routing_key, body = args
-    handler = HANDLERS.get(routing_key, None)
-    if handler:
-        host, instance = handler(tenant_id, routing_key, body)
-        when = body['_context_timestamp')
-        publisher_id = body['publisher_id']
-        datetime_when = datetime.strptime(when, "%Y-%m-%dT%H:%M:%S.%f")
-        record = models.RawData(host=host, instance=instance, 
-                                tenant=tenant_id, json=json_args,
-                                publisher=publisher_id,
-                                routing_key=routing_key, when=datetime_when)
-
-        record.save()
 
 
 def data(request):
