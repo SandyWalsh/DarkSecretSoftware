@@ -11,4 +11,4 @@ class RawData(models.Model):
     event = models.CharField(max_length=50)
     service = models.CharField(max_length=50)
     host = models.CharField(max_length=50)
-    instance = models.CharField(max_length=50)
+    instance = models.CharField(max_length=50, blank=True)

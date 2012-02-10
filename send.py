@@ -2,7 +2,7 @@ import json
 import urllib
 import urllib2
 
-url = 'http://darksecretsoftware.com/stackmon/data/'
+url = 'http://darksecretsoftware.com/stacktach/data/'
 
 values = {'first': [1,2,3], 'second': dict(a=1, b=2), 'third': (1,2,3)}
 jvalues = json.dumps(values)

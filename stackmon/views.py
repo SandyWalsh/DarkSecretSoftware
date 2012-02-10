@@ -2,7 +2,7 @@
 
 from django.shortcuts import render_to_response
 
-from stackmon import models
+from dss.stackmon import models
 
 import datetime
 import json
@@ -18,7 +18,7 @@ VERSION = 1
 
 def _monitor_message(routing_key, body):
     publisher = body['publisher_id']
-    parts = publisher_id.split('.')   
+    parts = publisher.split('.')   
     service = parts[0]
     host = parts[1]
     instance = body['payload'].get('instance_id', None)
@@ -43,19 +43,23 @@ HANDLERS = {'monitor.info':_monitor_message,
             '':_compute_update_message}
 
 
-def _parse(tenant_id, args, json_args):
+def _parse(tenant, args, json_args):
     routing_key, body = args
     handler = HANDLERS.get(routing_key, None)
     if handler:
-        values = handler(tenant_id, routing_key, body)
+        values = handler(routing_key, body)
         if not values:
-            return
-        values['when'] = body['_context_timestamp')
-        values['publisher'] = body['publisher_id']
-        values['when'] = datetime.strptime(when, "%Y-%m-%dT%H:%M:%S.%f")
+            return {}
+
+        values['tenant'] = tenant
+        when = body['_context_timestamp']
+        when = datetime.datetime.strptime(when, "%Y-%m-%dT%H:%M:%S.%f")
+        values['when'] = when # body['_context_timestamp']
         values['routing_key'] = routing_key
         record = models.RawData(**values)
         record.save()
+        return values
+    return {}
 
 
 class State(object):
@@ -90,14 +94,15 @@ def data(request):
     args = json.loads(raw_args)
     c = default_context(state)
     pp = pprint.PrettyPrinter(depth=2)
-    c['cooked_args'] = args #pp.pformat(args)
-    _parse(0, args, raw_args)
+    fields = _parse(0, args, raw_args)
+    c['cooked_args'] = fields
     return render_to_response('stackmon/data.html', c)
 
 
 def host_status(request):
     state = get_state(request)
     c = default_context(state)
+    c['hosts']=models.RawData.objects.filter(host__gt='').order_by('-when')[:5]
     return render_to_response('stackmon/host_status.html', c)
 
 
