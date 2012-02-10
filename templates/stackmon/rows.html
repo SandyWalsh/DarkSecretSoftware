@@ -4,10 +4,14 @@
     <a href='#' onclick='expand({{row.id}});'>[+]</a>
     {% endif %}
 
-    {% if row.routing_key %}<a href='#' onclick='details("routing_key", {{row.id}});'>{{row.routing_key}}</a>, {%endif%}
+    {% if row.routing_key %}
+    <span style='{% if row.is_error %}background-color:#ffaaaa;{% endif %}'>
+    <a href='#' onclick='details("routing_key", {{row.id}});'>{{row.routing_key}}</a>
+    </span>, 
+    {%endif%}
     <a href='#' onclick='details("service", {{row.id}});'>{{row.service}}</a>, 
     <a href='#' onclick='details("host", {{row.id}});'>{{row.host}}</a>, 
-    <a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a>, 
+    <b><a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a></b>, 
     <a href='#' onclick='details("instance", {{row.id}});'>{{row.instance}}</a>, 
     <a href='#' onclick='details("when", {{row.id}});'>{{row.when|timesince:utc}} ago</a>
 </p>

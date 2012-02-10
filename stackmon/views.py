@@ -68,7 +68,9 @@ def _parse(tenant, args, json_args):
 
 
 def _post_process_raw_data(rows):
-    pass
+    for row in rows:
+        if "error" in row.routing_key:
+            row.is_error = True
 
 
 class State(object):
@@ -112,8 +114,10 @@ def details(request, column, row_id):
     c = default_context(state)
     row = models.RawData.objects.get(pk=row_id)
     value = getattr(row, column)
-    c['rows'] = models.RawData.objects.filter(**{column:value}).\
+    rows = models.RawData.objects.filter(**{column:value}).\
                                   order_by('-when', '-microseconds')[:200]
+    _post_process_raw_data(rows)
+    c['rows'] = rows
     c['allow_expansion'] = True
     return render_to_response('stackmon/rows.html', c)
 

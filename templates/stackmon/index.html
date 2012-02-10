@@ -88,20 +88,21 @@
 
         <div class='status'>
             <div class='status-title'>Recent Host Activity</div>
-            <div id='host_activity' class='status-inner std-height'>
+            <div id='host_activity' class='status-inner'>
                 {% include "stackmon/host_status.html" %}
             </div>
         </div>
         <div class='status'>
             <div class='status-title'>Recent Instance Activity</div>
-            <div id='instance_activity' class='status-inner std-height'>
+            <div id='instance_activity' class='status-inner'>
                 {% include "stackmon/instance_status.html" %}
            </div>
         </div>
         <div class='status'>
             <div class='status-title'>Commands</div>
-                <div class='status-inner std-height' style='height:1em;'>
-                    <div>blah blah blah</div>
+                <div class='status-inner'>
+                    <input type=text style='width:100%; background-color:black;color:white;'
+                            value='<custom query here>'/>
                 </div>
         </div>
         <div class='status'>
