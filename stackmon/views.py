@@ -17,6 +17,7 @@ VERSION = 1
 
 
 def _monitor_message(routing_key, body):
+    event = body['event_type']
     publisher = body['publisher_id']
     parts = publisher.split('.')   
     service = parts[0]
@@ -25,9 +26,10 @@ def _monitor_message(routing_key, body):
     request_spec = payload.get('request_spec', None)
     instance = None
     instance = payload.get('instance_id', instance)
-    event = body['event_type']
+    nova_tenant = body.get('_context_project_id', None)
+    nova_tenant = payload.get('tenant_id', nova_tenant)
     return dict(host=host, instance=instance, publisher=publisher,
-                service=service, event=event)
+                service=service, event=event, nova_tenant=nova_tenant)
                 
 
 def _compute_update_message(routing_key, body):
@@ -37,8 +39,10 @@ def _compute_update_message(routing_key, body):
     service = args['service_name']
     event = body['method']
     instance = 'n/a'
+    nova_tenant = args.get('_context_project_id', None)
     return dict(host=host, instance=instance, publisher=publisher,
-                service=service, event=event)
+                service=service, event=event, nova_tenant=nova_tenant)
+
 
 # routing_key : handler
 HANDLERS = {'monitor.info':_monitor_message,

@@ -1,22 +1,42 @@
+<table style='font-size:1em;'>
+<th>
+    <td class='title'></td>
+    <td class='title'>source</td>
+    <td class='title'>tenant</td>
+    <td class='title'>service</td>
+    <td class='title'>host</td>
+    <td class='title'>event</td>
+    <td class='title'>instance</td>
+    <td class='title'>when</td>
+</th>
 {% for row in rows %}
-<p style='margin:0;padding:0;'>
+<tr>
+    <td>
     {% if allow_expansion %}
     <a href='#' onclick='expand({{row.id}});'>[+]</a>
     {% endif %}
+    </td>
 
+    <td>
     {% if row.routing_key %}
-    <span style='{% if row.is_error %}background-color:#ffaaaa;{% endif %}'>
+    <td><span style='{% if row.is_error %}background-color:#ffaaaa;{% endif %}'>
     <a href='#' onclick='details("routing_key", {{row.id}});'>{{row.routing_key}}</a>
-    </span>, 
+    </span>
     {%endif%}
-    <a href='#' onclick='details("service", {{row.id}});'>{{row.service}}</a>, 
-    <a href='#' onclick='details("host", {{row.id}});'>{{row.host}}</a>, 
-    <b><a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a></b>, 
-    <a href='#' onclick='details("instance", {{row.id}});'>{{row.instance}}</a>, 
-    <a href='#' onclick='details("when", {{row.id}});'>{{row.when|timesince:utc}} ago</a>
-</p>
-
+    </td>
+    <td class='cell-border'><a href='#' onclick='details("nova_tenant", {{row.id}});'>{{row.nova_tenant}}</a></td>
+    <td class='cell-border'><a href='#' onclick='details("service", {{row.id}});'>{{row.service}}</a></td>
+    <td class='cell-border'><a href='#' onclick='details("host", {{row.id}});'>{{row.host}}</a></td>
+    <td class='cell-border'><b><a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a></b></td>
+    <td class='cell-border'><a href='#' onclick='details("instance", {{row.id}});'>{{row.instance}}</a></td>
+    <td class='cell-border'><a href='#' onclick='details("when", {{row.id}});'>{{row.when|timesince:utc}} ago</a></td>
+</tr>
 {% if allow_expansion %}
-<div id='row_expansion_{{row.id}}' ></div>
+<tr>
+<td colspan=8>
+<div id='row_expansion_{{row.id}}' style='font-size:1.2em'></div>
+</td>
+</tr>
 {% endif %}
 {% endfor %}
+</table>

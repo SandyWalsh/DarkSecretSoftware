@@ -1,8 +1,10 @@
 <!-- Dark Secret Software Inc. - StackTach -->
 <html lang="en">
     <head>                                                                  
-        <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.3.min.js">
-        </script>
+        <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+
         <script type="text/javascript" src="/static/js/jquery.timers.js"></script>
         <link href='http://fonts.googleapis.com/css?family=Kaushan+Script' rel='stylesheet' type='text/css'>
         <link href='http://fonts.googleapis.com/css?family=PT+Sans&subset=latin' rel='stylesheet' type='text/css'>
@@ -34,20 +36,31 @@
             a:hover {
                 text-decoration:underline;
             }
+            .cell-border {
+                border-left: 1px solid black;
+            }
+            .title {
+                font-weight: bold;
 
+            }
+            td {
+                padding-right: 1em;
+            }
             .status {
                 border:1px #bbbbcc solid;
                 width:-1em;
                 margin-bottom:2em;
             }
             .status-title {
+                /*
                 display:inline;
-                margin-left: 1em;
-                margin-right: 1em;
                 position:relative;
-                background-color: white;
                 top:-.7em;
                 left:-.5em;
+                */
+                margin-left: 1em;
+                margin-right: 1em;
+                background-color: white;
                 font-family: 'PT Sans', serif;
                 color:#E5574D;
                 font-weight:bold;
@@ -64,6 +77,7 @@
             .std-height {
                 height:5em;
                 overflow-y:scroll;
+                overflow-x:hidden;
             }
 
         </style>
@@ -80,36 +94,39 @@
             };
 
             $(document).ready(function() {               
+                $('#host-box').resizable();
+                $('#instance-box').resizable();
             });
        </script>                                                               
     </head>                                                                 
     <body>
         <div class='fancy'>StackTach</div>
 
-        <div class='status'>
-            <div class='status-title'>Recent Host Activity</div>
+        <div class='status-title'>Recent Host Activity</div>
+        <div id='host-box' class='status std-height'>
             <div id='host_activity' class='status-inner'>
                 {% include "stackmon/host_status.html" %}
             </div>
         </div>
-        <div class='status'>
-            <div class='status-title'>Recent Instance Activity</div>
+
+        <div class='status-title'>Recent Instance Activity</div>
+        <div id='instance-box' class='status std-height'>
             <div id='instance_activity' class='status-inner'>
                 {% include "stackmon/instance_status.html" %}
            </div>
         </div>
+        <div class='status-title'>Commands</div>
         <div class='status'>
-            <div class='status-title'>Commands</div>
-                <div class='status-inner'>
-                    <input type=text style='width:100%; background-color:black;color:white;'
-                            value='<custom query here>'/>
-                </div>
+            <div class='status-inner'>
+                <input type=text style='width:100%; background-color:black;color:white;'
+                        value='<custom query here>'/>
+            </div>
         </div>
+        <div class='status-title'>Details</div>
         <div class='status'>
-            <div class='status-title'>Details</div>
-                <div id='detail' class='status-inner'>
-                    <div>blah blah blah</div>
-                </div>
+            <div id='detail' class='status-inner'>
+                <div>blah blah blah</div>
+            </div>
         </div>
         
     </body>                                                                 
