@@ -80,15 +80,16 @@ def _post_process_raw_data(rows):
 class State(object):
     def __init__(self):
         self.version = VERSION
+        self.tenant_id = tenant_id
 
 
-def get_state(request):
+def get_state(request, tenant_id=None):
     if 'state' in request.session:
         state = request.session['state']
         if hasattr(state, 'version') and state.version >= VERSION:
             return state
 
-    state = State()
+    state = State(tenant_id)
     request.session['state'] = state
     return state
 
@@ -98,13 +99,19 @@ def default_context(state):
     return context
 
 
-def home(request):
+def welcome(request):
     state = get_state(request)
+    return render_to_response('stackmon/welcome.html', default_context(state)) 
+
+
+
+def home(request, tenant_id):
+    state = get_state(request, tenant_id)
     return render_to_response('stackmon/index.html', default_context(state)) 
 
 
-def data(request):
-    state = get_state(request)
+def data(request, tenant_id):
+    state = get_state(request, tenant_id)
     raw_args = request.POST.get('args', "{}")
     args = json.loads(raw_args)
     c = default_context(state)
@@ -113,8 +120,8 @@ def data(request):
     return render_to_response('stackmon/data.html', c)
 
 
-def details(request, column, row_id):
-    state = get_state(request)
+def details(request, tenant_id, column, row_id):
+    state = get_state(request, tenant_id)
     c = default_context(state)
     row = models.RawData.objects.get(pk=row_id)
     value = getattr(row, column)
@@ -126,8 +133,8 @@ def details(request, column, row_id):
     return render_to_response('stackmon/rows.html', c)
 
 
-def expand(request, row_id):
-    state = get_state(request)
+def expand(request, tenant_id, row_id):
+    state = get_state(request, tenant_id)
     c = default_context(state)
     row = models.RawData.objects.get(pk=row_id)
     payload = json.loads(row.json)
@@ -136,8 +143,8 @@ def expand(request, row_id):
     return render_to_response('stackmon/expand.html', c)
 
 
-def host_status(request):
-    state = get_state(request)
+def host_status(request, tenant_id):
+    state = get_state(request, tenant_id)
     c = default_context(state)
     hosts = models.RawData.objects.filter(host__gt='').order_by('-when', '-microseconds')[:20]
     _post_process_raw_data(hosts)
@@ -145,8 +152,8 @@ def host_status(request):
     return render_to_response('stackmon/host_status.html', c)
 
 
-def instance_status(request):
-    state = get_state(request)
+def instance_status(request, tenant_id):
+    state = get_state(request, tenant_id)
     c = default_context(state)
     instances = models.RawData.objects.exclude(instance='n/a').exclude(instance__isnull=True).order_by('-when', '-microseconds')[:20]
     _post_process_raw_data(instances)

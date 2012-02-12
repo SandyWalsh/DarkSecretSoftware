@@ -83,51 +83,31 @@
         </style>
 
         <script type="text/javascript">             
-            function details(column, row_id)
-            {
-                $("#detail").load('/stacktach/{{tenant_id}}/details/' + column + '/' + row_id);
-            };
-
-            function expand(row_id)
-            {
-                $("#row_expansion_" + row_id).load('/stacktach/{{tenant_id}}/expand/' + row_id);
-            };
-
             $(document).ready(function() {               
-                $('#host-box').resizable();
-                $('#instance-box').resizable();
             });
        </script>                                                               
     </head>                                                                 
     <body>
         <div class='fancy'>StackTach</div>
 
-        <div class='status-title'>Recent Host Activity</div>
-        <div id='host-box' class='status std-height'>
+        <div class='status-title'>About</div>
+        <div id='host-box' class='status'>
             <div id='host_activity' class='status-inner'>
-                {% include "stackmon/host_status.html" %}
+            StackTach is a hosted debug/monitoring tool for OpenStack Nova
+            deployments.
             </div>
         </div>
 
-        <div class='status-title'>Recent Instance Activity</div>
-        <div id='instance-box' class='status std-height'>
+        <div class='status-title'>Connecting StackTach to OpenStack</div>
+        <div id='instance-box' class='status'>
             <div id='instance_activity' class='status-inner'>
-                {% include "stackmon/instance_status.html" %}
+            <ul>
+            <li>Get a StackTach Tenant ID
+            <li>Add <pre>--notification_driver=nova.notifier.monitor_notifier</pre> to your nova.conf file.
+            <li>Configure and run the <a target='_blank' href='https://github.com/SandyWalsh/StackTach'>StackTach Worker</a> somewhere in your Nova development environment. 
+            <li>Restart Nova and visit http://darksecretsoftware.com/stacktach/[your_tenant_id]/ to see your Nova installation in action!
            </div>
         </div>
-        <div class='status-title'>Commands</div>
-        <div class='status'>
-            <div class='status-inner'>
-                <input type=text style='width:100%; background-color:black;color:white;'
-                        value='<custom query here>'/>
-            </div>
-        </div>
-        <div class='status-title'>Details</div>
-        <div class='status'>
-            <div id='detail' class='status-inner'>
-                <div>blah blah blah</div>
-            </div>
-        </div>
-        
+       
     </body>                                                                 
 </html>
