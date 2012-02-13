@@ -18,13 +18,15 @@
     </td>
 
     <td>
-    {% if row.routing_key %}
     <td><span style='{% if row.is_error %}background-color:#ffaaaa;{% endif %}'>
     <a href='#' onclick='details("routing_key", {{row.id}});'>{{row.routing_key}}</a>
     </span>
-    {%endif%}
     </td>
-    <td class='cell-border'><a href='#' onclick='details("nova_tenant", {{row.id}});'>{{row.nova_tenant}}</a></td>
+    <td class='cell-border'>
+        <a href='#' onclick='details("nova_tenant", {{row.id}});'>
+        {% if row.nova_tenant %}{{row.nova_tenant}}{% endif %}
+        </a>
+    </td>
     <td class='cell-border'><a href='#' onclick='details("service", {{row.id}});'>{{row.service}}</a></td>
     <td class='cell-border'><a href='#' onclick='details("host", {{row.id}});'>{{row.host}}</a></td>
     <td class='cell-border'><b><a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a></b></td>

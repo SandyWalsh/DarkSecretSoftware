@@ -1,6 +1,8 @@
 # Copyright 2012 - Dark Secret Software Inc.
 
 from django.shortcuts import render_to_response
+from django import http
+from django.utils.functional import wraps
 
 from dss.stackmon import models
 
@@ -13,7 +15,15 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-VERSION = 1
+VERSION = 3
+
+
+class My401(BaseException):
+    pass
+
+
+class HttpResponseUnauthorized(http.HttpResponse):
+    status_code = 401
 
 
 def _monitor_message(routing_key, body):
@@ -33,12 +43,12 @@ def _monitor_message(routing_key, body):
                 
 
 def _compute_update_message(routing_key, body):
-    publisher = "n/a"
+    publisher = None
+    instance = None
     args = body['args']
     host = args['host']
     service = args['service_name']
     event = body['method']
-    instance = 'n/a'
     nova_tenant = args.get('_context_project_id', None)
     return dict(host=host, instance=instance, publisher=publisher,
                 service=service, event=event, nova_tenant=nova_tenant)
@@ -78,54 +88,108 @@ def _post_process_raw_data(rows):
 
 
 class State(object):
-    def __init__(self):
+    def __init__(self, tenant_id=None):
         self.version = VERSION
         self.tenant_id = tenant_id
+ 
+    def __str__(self):
+        return "[Version %s, Tenant %s, Email %s, Project %s]" % (
+            self.version, self.tenant_id, self.tenant.email,
+            self.tenant.project_name)
+ 
 
-
-def get_state(request, tenant_id=None):
-    if 'state' in request.session:
-        state = request.session['state']
-        if hasattr(state, 'version') and state.version >= VERSION:
-            return state
-
+def _reset_state(request, tenant_id):
     state = State(tenant_id)
     request.session['state'] = state
     return state
 
+   
+def _get_state(request, tenant_id=None):
+    if 'state' in request.session:
+        state = request.session['state']
+    else:
+        state =_reset_state(request, tenant_id)
 
-def default_context(state):
-    context = dict(utc=datetime.datetime.utcnow())
+    if hasattr(state, 'version') and state.version < VERSION:
+        state =_reset_state(request, tenant_id)
+    try:
+        state.tenant = models.Tenant.objects.get(tenant_id=tenant_id)
+    except models.Tenant.DoesNotExist:
+        # raise HttpResponseUnauthorized()
+        raise My401()
+
+    return state
+
+
+def tenant_check(view):
+    @wraps(view)
+    def inner(*args, **kwargs):
+        try:
+            return view(*args, **kwargs)
+        # except HttpResponseUnauthorized, e:
+        except My401:
+            return HttpResponseUnauthorized()
+        
+    return inner
+
+
+def _default_context(state):
+    context = dict(utc=datetime.datetime.utcnow(), state=state)
     return context
 
-
+    
 def welcome(request):
-    state = get_state(request)
-    return render_to_response('stackmon/welcome.html', default_context(state)) 
+    state = _get_state(request)
+    return render_to_response('stackmon/welcome.html', _default_context(state)) 
 
 
-
+@tenant_check
 def home(request, tenant_id):
-    state = get_state(request, tenant_id)
-    return render_to_response('stackmon/index.html', default_context(state)) 
+    state = _get_state(request, tenant_id)
+    return render_to_response('stackmon/index.html', _default_context(state)) 
 
 
+def logout(request):
+    del request.session['state']
+    return render_to_response('stackmon/welcome.html', _default_context(None)) 
+
+
+@tenant_check
+def new_tenant(request):
+    state = _get_state(request)
+    context = _default_context(state)
+    if request.method == 'POST':
+        form = models.TenantForm(request.POST)
+        if form.is_valid():
+            rec = models.Tenant(**form.cleaned_data)
+            rec.save()
+            _reset_state(request, rec.tenant_id)
+            return http.HttpResponseRedirect('/stacktach/%d' % rec.tenant_id)
+    else:
+        form = models.TenantForm()
+        context['form'] = form
+    return render_to_response('stackmon/new_tenant.html', context)
+
+
+@tenant_check
 def data(request, tenant_id):
-    state = get_state(request, tenant_id)
+    state = _get_state(request, tenant_id)
     raw_args = request.POST.get('args', "{}")
     args = json.loads(raw_args)
-    c = default_context(state)
-    fields = _parse(0, args, raw_args)
+    c = _default_context(state)
+    fields = _parse(state.tenant, args, raw_args)
     c['cooked_args'] = fields
     return render_to_response('stackmon/data.html', c)
 
 
+@tenant_check
 def details(request, tenant_id, column, row_id):
-    state = get_state(request, tenant_id)
-    c = default_context(state)
+    state = _get_state(request, tenant_id)
+    c = _default_context(state)
     row = models.RawData.objects.get(pk=row_id)
     value = getattr(row, column)
-    rows = models.RawData.objects.filter(**{column:value}).\
+    rows = models.RawData.objects.filter(tenant_id=tenant_id).\
+                                  filter(**{column:value}).\
                                   order_by('-when', '-microseconds')[:200]
     _post_process_raw_data(rows)
     c['rows'] = rows
@@ -133,9 +197,10 @@ def details(request, tenant_id, column, row_id):
     return render_to_response('stackmon/rows.html', c)
 
 
+@tenant_check
 def expand(request, tenant_id, row_id):
-    state = get_state(request, tenant_id)
-    c = default_context(state)
+    state = _get_state(request, tenant_id)
+    c = _default_context(state)
     row = models.RawData.objects.get(pk=row_id)
     payload = json.loads(row.json)
     pp = pprint.PrettyPrinter()
@@ -143,19 +208,26 @@ def expand(request, tenant_id, row_id):
     return render_to_response('stackmon/expand.html', c)
 
 
+@tenant_check
 def host_status(request, tenant_id):
-    state = get_state(request, tenant_id)
-    c = default_context(state)
-    hosts = models.RawData.objects.filter(host__gt='').order_by('-when', '-microseconds')[:20]
+    state = _get_state(request, tenant_id)
+    c = _default_context(state)
+    hosts = models.RawData.objects.filter(tenant_id=tenant_id).\
+                                   filter(host__gt='').\
+                                   order_by('-when', '-microseconds')[:20]
     _post_process_raw_data(hosts)
     c['rows'] = hosts
     return render_to_response('stackmon/host_status.html', c)
 
 
+@tenant_check
 def instance_status(request, tenant_id):
-    state = get_state(request, tenant_id)
-    c = default_context(state)
-    instances = models.RawData.objects.exclude(instance='n/a').exclude(instance__isnull=True).order_by('-when', '-microseconds')[:20]
+    state = _get_state(request, tenant_id)
+    c = _default_context(state)
+    instances = models.RawData.objects.filter(tenant_id=tenant_id).\
+                                       exclude(instance='n/a').\
+                                       exclude(instance__isnull=True).\
+                                       order_by('-when', '-microseconds')[:20]
     _post_process_raw_data(instances)
     c['rows'] = instances
     return render_to_response('stackmon/instance_status.html', c)
