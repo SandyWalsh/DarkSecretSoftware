@@ -13,25 +13,31 @@
 <tr>
     <td>
     {% if allow_expansion %}
-    <a href='#' onclick='expand({{row.id}});'>[+]</a>
+    <a href='#' onclick='expand({{state.tenant_id}}, {{row.id}});'>[+]</a>
     {% endif %}
     </td>
 
     <td>
     <td><span style='{% if row.is_error %}background-color:#ffaaaa;{% endif %}'>
-    <a href='#' onclick='details("routing_key", {{row.id}});'>{{row.routing_key}}</a>
+    <a href='#' onclick='details({{state.tenant_id}}, "routing_key", {{row.id}});'>{{row.routing_key}}</a>
     </span>
     </td>
     <td class='cell-border'>
-        <a href='#' onclick='details("nova_tenant", {{row.id}});'>
+        <a href='#' onclick='details({{state.tenant_id}}, "nova_tenant", {{row.id}});'>
         {% if row.nova_tenant %}{{row.nova_tenant}}{% endif %}
         </a>
     </td>
-    <td class='cell-border'><a href='#' onclick='details("service", {{row.id}});'>{{row.service}}</a></td>
-    <td class='cell-border'><a href='#' onclick='details("host", {{row.id}});'>{{row.host}}</a></td>
-    <td class='cell-border'><b><a href='#' onclick='details("event", {{row.id}});'>{{row.event}}</a></b></td>
-    <td class='cell-border'><a href='#' onclick='details("instance", {{row.id}});'>{{row.instance}}</a></td>
-    <td class='cell-border'><a href='#' onclick='details("when", {{row.id}});'>{{row.when|timesince:utc}} ago</a></td>
+    <td class='cell-border'><a href='#' onclick='details({{state.tenant_id}}, "service", {{row.id}});'>{{row.service}}</a></td>
+    <td class='cell-border'><a href='#' onclick='details({{state.tenant_id}}, "host", {{row.id}});'>{{row.host}}</a></td>
+    <td class='cell-border'><b><a href='#' onclick='details({{state.tenant_id}}, "event", {{row.id}});'>{{row.event}}</a></b></td>
+    <td class='cell-border'>
+        <a href='#' onclick='details({{state.tenant_id}}, "instance", {{row.id}});'>
+        {% if row.instance %}
+            {{row.instance}}
+        {% endif %}
+        </a>
+    </td>
+    <td class='cell-border'><a href='#' onclick='details({{state.tenant_id}}, "when", {{row.id}});'>{{row.when|timesince:utc}} ago</a></td>
 </tr>
 {% if allow_expansion %}
 <tr>

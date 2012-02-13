@@ -112,11 +112,11 @@ def _get_state(request, tenant_id=None):
 
     if hasattr(state, 'version') and state.version < VERSION:
         state =_reset_state(request, tenant_id)
-    try:
-        state.tenant = models.Tenant.objects.get(tenant_id=tenant_id)
-    except models.Tenant.DoesNotExist:
-        # raise HttpResponseUnauthorized()
-        raise My401()
+    if tenant_id:
+        try:
+            state.tenant = models.Tenant.objects.get(tenant_id=tenant_id)
+        except models.Tenant.DoesNotExist:
+            raise My401()
 
     return state
 
@@ -139,7 +139,7 @@ def _default_context(state):
 
     
 def welcome(request):
-    state = _get_state(request)
+    state = _reset_state(request, None)
     return render_to_response('stackmon/welcome.html', _default_context(state)) 
 
 

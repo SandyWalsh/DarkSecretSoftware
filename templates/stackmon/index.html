@@ -1,14 +1,14 @@
 {% extends "stackmon/base.html" %}
 
 {% block extra_js %}
-            function details(column, row_id)
+            function details(tenant_id, column, row_id)
             {
-                $("#detail").load('/stacktach/{{tenant_id}}/details/' + column + '/' + row_id);
+                $("#detail").load('/stacktach/' + tenant_id + '/details/' + column + '/' + row_id);
             };
 
-            function expand(row_id)
+            function expand(tenant_id, row_id)
             {
-                $("#row_expansion_" + row_id).load('/stacktach/{{tenant_id}}/expand/' + row_id);
+                $("#row_expansion_" + row_id).load('/stacktach/' + tenant_id + '/expand/' + row_id);
             };
 {% endblock %}
 
