@@ -81,11 +81,13 @@ def _parse(tenant, args, json_args):
     return {}
 
 
-def _post_process_raw_data(rows):
+def _post_process_raw_data(rows, highlight=None):
     for row in rows:
         if "error" in row.routing_key:
             row.is_error = True
-
+        if highlight and row.id == int(highlight):
+            row.highlight = True
+        row.when += datetime.timedelta(microseconds=row.microseconds)
 
 class State(object):
     def __init__(self, tenant_id=None):
@@ -188,12 +190,19 @@ def details(request, tenant_id, column, row_id):
     c = _default_context(state)
     row = models.RawData.objects.get(pk=row_id)
     value = getattr(row, column)
-    rows = models.RawData.objects.filter(tenant_id=tenant_id).\
-                                  filter(**{column:value}).\
-                                  order_by('-when', '-microseconds')[:200]
-    _post_process_raw_data(rows)
+    rows = models.RawData.objects.filter(tenant_id=tenant_id)
+    if column != 'when':
+        rows = rows.filter(**{column:value})
+    else:
+        from_time = value - datetime.timedelta(minutes=1)
+        to_time = value + datetime.timedelta(minutes=1)
+        rows = rows.filter(when__range=(from_time, to_time))
+                                  
+    rows = rows.order_by('-when', '-microseconds')[:200]
+    _post_process_raw_data(rows, highlight=row_id)
     c['rows'] = rows
     c['allow_expansion'] = True
+    c['show_absolute_time'] = True
     return render_to_response('stackmon/rows.html', c)
 
 
