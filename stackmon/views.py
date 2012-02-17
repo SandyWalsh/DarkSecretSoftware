@@ -2,6 +2,7 @@
 
 from django.shortcuts import render_to_response
 from django import http
+from django import template
 from django.utils.functional import wraps
 
 from dss.stackmon import models
@@ -15,7 +16,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-VERSION = 3
+VERSION = 4
 
 
 class My401(BaseException):
@@ -90,35 +91,41 @@ def _post_process_raw_data(rows, highlight=None):
         row.when += datetime.timedelta(microseconds=row.microseconds)
 
 class State(object):
-    def __init__(self, tenant_id=None):
+    def __init__(self):
         self.version = VERSION
-        self.tenant_id = tenant_id
+        self.tenant = None
  
     def __str__(self):
-        return "[Version %s, Tenant %s, Email %s, Project %s]" % (
-            self.version, self.tenant_id, self.tenant.email,
-            self.tenant.project_name)
+        tenant = "?"
+        if self.tenant:
+            tenant = "'%s' - %s (%d)" % (self.tenant.project_name,
+                                         self.tenant.email, self.tenant.id)
+        return "[Version %s, Tenant %s]" % (self.version, tenant)
  
 
-def _reset_state(request, tenant_id):
-    state = State(tenant_id)
+def _reset_state(request):
+    state = State()
     request.session['state'] = state
     return state
 
    
 def _get_state(request, tenant_id=None):
+    tenant = None
+    if tenant_id:
+        try:
+            tenant = models.Tenant.objects.get(tenant_id=tenant_id)
+        except models.Tenant.DoesNotExist:
+            raise My401()
+
     if 'state' in request.session:
         state = request.session['state']
     else:
-        state =_reset_state(request, tenant_id)
+        state =_reset_state(request)
 
     if hasattr(state, 'version') and state.version < VERSION:
-        state =_reset_state(request, tenant_id)
-    if tenant_id:
-        try:
-            state.tenant = models.Tenant.objects.get(tenant_id=tenant_id)
-        except models.Tenant.DoesNotExist:
-            raise My401()
+        state =_reset_state(request)
+        
+    state.tenant = tenant
 
     return state
 
@@ -142,7 +149,7 @@ def _default_context(state):
     
 def welcome(request):
     state = _reset_state(request, None)
-    return render_to_response('stackmon/welcome.html', _default_context(state)) 
+    return render_to_response('stackmon/welcome.html', _default_context(state))
 
 
 @tenant_check

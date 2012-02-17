@@ -17,6 +17,18 @@
             <li>Add <pre>--notification_driver=nova.notifier.monitor_notifier</pre> to your nova.conf file.
             <li>Configure and run the <a target='_blank' href='https://github.com/SandyWalsh/StackTach'>StackTach Worker</a> somewhere in your Nova development environment. 
             <li>Restart Nova and visit http://darksecretsoftware.com/stacktach/[your_tenant_id]/ to see your Nova installation in action!
+            </ul>
+
+<!--
+            <div>
+              <h3>Login using <a href="http://oauth.net/" title="OAuth">OAuth</a> from:</h3>
+              <ul>
+                {% for name in social_auth.backends.oauth %}
+                   <li><a rel="nofollow" href="{% url socialauth_begin name %}">{{ name|title }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+-->                  
            </div>
         </div>
 {% endblock %}       
