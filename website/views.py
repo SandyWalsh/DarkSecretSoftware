@@ -511,3 +511,7 @@ def query(request):
         context['text'] = response
         return render_to_response('query.html', context)
     return render_to_response('look.html', context)
+
+
+def card(request):
+    return render_to_response('card.html', {})

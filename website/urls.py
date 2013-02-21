@@ -8,6 +8,7 @@ urlpatterns = patterns('',
     url(r'^$', 'dss.website.views.home', name='home'),
     url(r'query/', 'dss.website.views.query', name='query'),
     url(r'reset/', 'dss.website.views.start_over', name='reset'),
+    url(r'card', 'dss.website.views.card', name='card'),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

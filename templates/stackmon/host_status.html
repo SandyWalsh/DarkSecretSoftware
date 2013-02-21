@@ -1,8 +1,0 @@
-{% include "stackmon/rows.html" %}
-
-<script type="text/javascript">
-  $(document).oneTime(2000, function() {
-    $('#host_activity').load('/stacktach/{{state.tenant.tenant_id}}/host_status'); 
-  });
-</script>
-
