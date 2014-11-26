@@ -281,7 +281,7 @@ ROOMS = {
     },
     'trampoline' : {
         'short': 'In the backyard by the trampoline.',
-        'long': 'In the NW corner of the backyard by the trapoline. A zipline runs East to the NE corner of the backyard.',
+        'long': 'In the NW corner of the backyard by the trampoline. A zipline runs East to the NE corner of the backyard.',
         'items': [Trampoline(), ZiplineTether()],
         'exits': [None, 'muddy yard', None, 'wood shed']
     },
